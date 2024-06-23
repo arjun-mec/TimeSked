@@ -15,15 +15,17 @@ from config import CAL_CLIENT_ID, CAL_CLIENT_SECRET
 
 
 async def link_handler(session, chat_id, calendar_id):
+    print("inside link _ handler")
     try:
         if not calendar_id:
             flow = return_flow()
+            print(flow)
             auth_url, _ = flow.authorization_url(
                 access_type='offline',
                 prompt='consent',
                 state=str(chat_id),
             )
-
+            print("auth url generated", auth_url)
             auth_msg = "To add events seamlessly, TimeSked needs to connect with your Google Calendar. Click below to grant access! Don't worry, TimeSked can only create a dedicated calendar and add, view, or delete events within it. Your existing event details remain private. 👍"  
             reply_markup = {
                 "inline_keyboard": [
@@ -38,6 +40,7 @@ async def link_handler(session, chat_id, calendar_id):
             }
             
             await send_msg(session, chat_id, None, auth_msg, reply_markup, None)
+            print("msg sent")
 
         else:
             output_msg = "No need to sign in again 😊 Your calendar is already registered with TimeSked, new events will be automatically added to your calendar!"
@@ -89,6 +92,7 @@ async def unlink_handler(db, session, chat_id, text=None, position=None):
     except Exception as e:
         print(f"Error in unlink_handler {e}")
 
+
 async def revoke_google_token(session, token):
     """Revokes a Google access or refresh token."""
     url = f'https://oauth2.googleapis.com/revoke?token={token}'
@@ -99,15 +103,19 @@ async def revoke_google_token(session, token):
 
 
 async def first_signin(db, chat_id, access_token, refresh_token):
-    col_ref = db.collection("user_records")
-    doc_ref = col_ref.document(str(chat_id))
-    doc = doc_ref.get().to_dict()
-    calendar_id = doc["calendar_id"]
-    if not calendar_id:
-        service = get_authenticated_service(db, chat_id, access_token, refresh_token)
-        calendar_id = create_calendar(service, "TimeSked")
-        
-    doc_ref.update({"access_token": access_token, "refresh_token": refresh_token, "calendar_id": calendar_id})
+    try:
+        col_ref = db.collection("user_records")
+        doc_ref = col_ref.document(str(chat_id))
+        doc = doc_ref.get().to_dict()
+        calendar_id = doc["calendar_id"]
+        if not calendar_id:
+            service = get_authenticated_service(db, chat_id, access_token, refresh_token)
+            calendar_id = create_calendar(service, "TimeSked")
+            
+        doc_ref.update({"access_token": access_token, "refresh_token": refresh_token, "calendar_id": calendar_id})
+    except Exception as e:
+        print(f"Error in first_signin : {e}")
+
 
 def get_authenticated_service(db, chat_id, access_token, refresh_token):
 

@@ -44,8 +44,11 @@ def time_cleaner(time_str):
 
 def escape_markdownv2(text):
     """Escapes MarkdownV2 special characters except within inline URLs."""
-    escaped_text = sub(r'(?<!https://)(?<!http://)[-\.\!\=\#\(\)]', r'\\\g<0>', text)
-    return escaped_text
+    if text:
+        escaped_text = sub(r'(?<!https://)(?<!http://)[-\.\!\=\#\(\)]', r'\\\g<0>', text)
+        return escaped_text
+    else:
+        return text
 
 
 def process_events(events): 

@@ -9,16 +9,20 @@ import json
 
 
 def return_flow():
-    creds_info = os.environ.get("GCAL_CRED")
-    creds_json = json.loads(creds_info)
-    REDIRECT_URI = "https://timesked.koyeb.app/oauthcallback"
-    flow = Flow.from_client_config(
-        creds_json,
-        scopes=['https://www.googleapis.com/auth/calendar.app.created'],
-        redirect_uri=REDIRECT_URI
-    )
+    try:
+        creds_info = os.environ.get("GCAL_CRED")
+        creds_json = json.loads(creds_info)
+        REDIRECT_URI = "https://timesked.koyeb.app/oauthcallback"
+        flow = Flow.from_client_config(
+            creds_json,
+            scopes=['https://www.googleapis.com/auth/calendar.app.created'],
+            redirect_uri=REDIRECT_URI
+        )
 
-    return flow
+        return flow
+    except Exception as e:
+        print(f"Could not return flow : {e}")
+
 
 TOKEN = os.environ.get("TIMESKED_TOKEN")
 FIREBASE_TOKEN = os.environ.get("FIREBASE")
