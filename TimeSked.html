@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TimeSked Dashboard</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #121212;
+        color: #f1f1f1;
+        min-height: 100vh;
+        padding: 80px 20px;
+      }
+      h1 {
+        margin-top: 20px;
+        text-align: center;
+        padding-left: 20px;
+        font-family: 'Montserrat', sans-serif;
+      }
+      .cards {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        width: 100%;
+        margin: 20px auto;
+        gap: 2rem;
+        /* Add padding to the top to create space between header and cards */
+      }
+      .card {
+        background-color: #1c1f26;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: left;
+        flex: 1 0 21%;
+        margin: 10px;
+        color: white;
+        backdrop-filter: blur(15px);
+        position: relative;
+        overflow: hidden;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.2) 0%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        border-radius: 50%;
+        filter: blur(50px);
+        z-index: -1;
+        top: -40px;
+        left: -40px;
+        transition: 0.8s ease;
+      }
+      .card:hover::before {
+        transform: translate(40px, 40px);
+      }
+      .card-content {
+        display: flex;
+        flex-direction: column;
+      }
+      .card h2 {
+        color: white;
+        font-size: 1.2rem;
+        margin: 10px 0 15px 0;
+      }
+      .card p {
+        font-size: 1.1rem;
+        margin: 0;
+      }
+      .fas {
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        margin-right: 10px;
+        font-size: 1.5rem;
+      }
+
+      /* Timeline Styles */
+      .version-history {
+        width: 100%;
+      }
+
+      .timeline {
+        width: 100%; /* Adjust width as needed */
+        position: relative;
+      }
+
+      .item {
+        margin-bottom: 40px; /* Adjust spacing between items */
+        display: flex;
+        align-items: center;
+      }
+
+      .bubble {
+        background-color: #222;
+        padding: 10px 20px;
+        border-radius: 20px;
+        text-align: center;
+        color: #fff;
+        font-weight: bold;
+        position: relative;
+        min-width: 30px; /* Set a minimum width for the bubble */
+      }
+
+      .details {
+        margin-left: 20px;
+        text-align: left;
+        line-height: 1.4;
+        flex-grow: 1;
+        width: 100%;
+      }
+
+      .timeline::before {
+        content: "";
+        position: absolute;
+        top: 20px;
+        bottom: 20px;
+        left: 35px; /* Adjust the line position to center with the bubble */
+        width: 2px;
+        background-color: rgba(62, 62, 78, 1);
+        z-index: -1;
+      }
+
+      .item:first-child .bubble {
+        outline: 2px solid #007bff;
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.8);
+      }
+
+      .item:first-child .bubble::after {
+        content: "";
+        position: absolute;
+        bottom: -50px;
+        left: 33px; /* Match the gray line position */
+        width: 6px;
+        height: 50px;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 123, 255, 0.8),
+          transparent
+        );
+        z-index: -1;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0px 15px;
+        background-color: #1c1f26;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 10;
+        backdrop-filter: blur(15px);
+      }
+      .telegram-button {
+        background-color: #0088cc;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        align-items: center;
+        text-decoration: none;
+        margin-right: 20px;
+      }
+      .telegram-button i {
+        margin-right: 5px;
+      }
+      .telegram-button a {
+        text-decoration: none !important;
+      }
+      button.telegram-button a {
+        text-decoration: none;
+      }
+
+      /* Styles for smaller screens (e.g., phones) */
+      @media (max-width: 768px) {
+        body {
+          padding-top: 80px;
+        }
+        .cards {
+          flex-direction: column;
+        }
+        .card {
+          flex: 1 0 100%;
+        }
+        .item {
+          /* Adjust the timeline for smaller screens */
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .details {
+          margin-left: 90px;
+          margin-top: 10px;
+          /* Ensure the details fit the screen width */
+          word-break: break-word; 
+          overflow-wrap: break-word; 
+          width: 70%; /* Adjust the width as needed to prevent overflow */ 
+        }
+        .timeline::before {
+          left: 30px; /* Adjust for smaller screens */
+        }
+
+        .item:first-child .bubble::after {
+          left: 28px; /* Adjust for smaller screens */
+        }
+        .header {
+          flex-direction: column;
+          align-items: center;
+          padding-bottom: 10px;
+        }
+        .header h1 {
+          margin-bottom: 10px;
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+        .cards{
+          padding-top: 2rem; 
+        }
+      }
+      /* For Chrome, Edge, and Safari */
+      ::-webkit-scrollbar {
+        width: 10px; /* Adjust width as needed */
+        background-color: transparent; /* Transparent background */
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: rgba(62, 62, 78, 1); /* Light gray color */
+        border-radius: 5px; /* Rounded corners */
+      }
+    </style>
+    <script
+      src="https://kit.fontawesome.com/2da45a37f0.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet"> 
+  </head>
+  <body>
+    <div class="header">
+      <h1>TimeSked Dashboard</h1>
+      <a href="https://t.me/TimeSked_bot" target="_blank">
+        <button class="telegram-button">
+          <i class="fab fa-telegram"></i>Open in Telegram
+        </button>
+      </a>
+    </div>
+    <script>
+      fetch('/api/get_counts')
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("event-count").textContent = data.event_count;
+          document.getElementById("message-count").textContent =
+            data.message_count;
+          document.getElementById("user-count").textContent = data.user_count;
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+          // Add error handling here, e.g., display an error message to the user
+        });
+    </script>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-content">
+          <i class="fas fa-users"></i>
+          <h2>Users</h2>
+          <p><div id="user-count"></div></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-content">
+          <i class="fas fa-chart-line"></i>
+          <h2>Total Messages</h2>
+          <p><div id="message-count"></div></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-content">
+          <i class="fas fa-calendar-check"></i>
+          <h2>Events Scheduled</h2>
+          <p><div id="event-count"></div></p>
+        </div>
+      </div>
+    </div>
+    <div class="version-history">
+      <h2>Version History</h2>
+      <div class="timeline">
+        <div class="item">
+          <div class="bubble">V13</div>
+          <div class="details">
+            <h3>Proper Google OAuth 2.0 flow implement</h3>
+            <p><b>Released on</b> 23 June 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V12</div>
+          <div class="details">
+            <h3>Performance and structural improvements</h3>
+            <p><b>Released on</b> 15 June 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V11.5</div>
+          <div class="details">
+            <h3>Switched to Gemini 1.5 Flash and lots of performance improvements</h3>
+            <p><b>Released on</b> 27 May 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V11</div>
+          <div class="details">
+            <h3>Migrated database from MySQL to Firebase for improved scalability and performance.</h3> 
+            <p><b>Released on</b> 19 May 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V10</div>
+          <div class="details">
+            <h3>Introduced support for multiple events, enhancing user experience and bot functionality.</h3> 
+            <p><b>Released on</b> 10 May 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V9</div>
+          <div class="details">
+            <h3>Integrated Google Calendar API to streamline event management and scheduling.</h3>
+            <p><b>Released on</b> 19 April 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V8.5</div>
+          <div class="details">
+            <h3>Enhanced the dashboard with UI/UX improvements for a more intuitive and user-friendly experience.</h3> 
+            <p><b>Released on</b> 10 April 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V8</div>
+          <div class="details">
+            <h3>Implemented a chat feature, enabling users to chat with Gemini about their events.</h3> 
+            <p><b>Released on</b> 8 April 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V7.5</div>
+          <div class="details">
+            <h3>Addressed various bug fixes and implemented performance optimizations for smoother operation.</h3>
+            <p><b>Released on</b> 30 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V7</div>
+          <div class="details">
+            <h3>Added a feature allowing users to view upcoming events.</h3>
+            <p><b>Released on</b> 29 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V6.5</div>
+          <div class="details">
+            <h3>Optimized database performance to enhance speed and responsiveness.</h3> 
+            <p><b>Released on</b> 28 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V6</div>
+          <div class="details">
+            <h3>Introduced location sharing of events using an inline button.</h3> 
+            <p><b>Released on</b> 27 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V5</div>
+          <div class="details">
+            <h3>Significantly reworked the regeneration feature for improved accuracy and usability.</h3>
+            <p><b>Released on</b> 25 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V4.5</div>
+          <div class="details">
+            <h3>Implemented bug fixes and introduced weather suggestions to provide users with relevant information.</h3>
+            <p><b>Released on</b> 20 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V4</div>
+          <div class="details">
+            <h3>Adopted a MySQL database to manage both user records and message logs, enhancing data management capabilities.</h3>
+            <p><b>Released on</b> 14 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V3.5</div>
+          <div class="details">
+            <h3>Implemented a dictionary for storing user messages, improving message handling efficiency.</h3>
+            <p><b>Released on</b> 2 March 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V3</div>
+          <div class="details">
+            <h3>Utilized CSV for user information management and added a "regenerate" button for enhanced user control.</h3>
+            <p><b>Released on</b> 20 February 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V2</div>
+          <div class="details">
+            <h3>Transitioned to a webhook-based system powered by Gemini for enhanced responsiveness and intelligence.</h3>
+            <p><b>Released on</b> 12 February 2024</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="bubble">V1</div>
+          <div class="details">
+            <h3>Initial release featuring a polling method and Hugging Face transformers model for language processing.</h3>
+            <p><b>Released on</b> 02 February 2024</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
