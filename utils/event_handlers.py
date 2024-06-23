@@ -254,7 +254,7 @@ async def message_creator(session, events, chat_id, sent_message_id, received_me
         i = 1
         for event_details in events:
             if isinstance(event_details, ValueError):
-                events_message += f"\n📅 Event \\#{i}\n{event_details}\n"
+                events_message += f"\n📅 Event \\#{i}\n{escape_markdownv2(event_details)}\n"
             else:
                 if not event_details["start_time"]:
                     event_details["start_time"] = ""
