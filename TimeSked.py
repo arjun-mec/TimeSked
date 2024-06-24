@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, Response
 from fastapi import Request as fast_request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from firebase_admin import initialize_app
 from firebase_admin import credentials
 from firebase_admin import firestore
@@ -85,19 +85,7 @@ async def oauth_callback(request: fast_request):
         success_msg = "Your account has been successfully linked, and a dedicated calendar has been set up. All your events will land right there. 🎯🗓️"
         await send_msg(session, chat_id, None, success_msg, None, None)
 
-        html_code = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Authorization Successful</title>
-        </head>
-        <body>
-            <h1>Authorization Successful!</h1>
-            <p>You can now close this window and return to TimeSked.</p>
-        </body>
-        </html>
-        """
-        return Response(content=html_code, media_type="text/html")
+        return RedirectResponse("https://t.me/TimeSked_bot")
     
     except Exception as e:
         print(f"Error in oauth_callback {e}")
