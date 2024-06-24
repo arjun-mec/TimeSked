@@ -13,6 +13,7 @@ import traceback
 from config import weather_api_key, TOKEN
 import datetime
 from urllib.parse import quote as url_quote
+import traceback
 
 
 async def text_logic(db, session, msg, chat_id, received_message_id, queue):
@@ -46,6 +47,7 @@ async def text_logic(db, session, msg, chat_id, received_message_id, queue):
 
 
 async def photo_logic(db, session, msg, chat_id, received_message_id, queue):
+    image = None
     try:
         waiting_msg = "⏳ Please Wait while TimeSked does its job... \nThis might take upto 10 seconds !⏳"
         response = await send_msg(
@@ -60,10 +62,10 @@ async def photo_logic(db, session, msg, chat_id, received_message_id, queue):
         file_id = msg["message"]["photo"][-2]["file_id"]
         image = await image_downloader(session, file_id)
 
-
     except Exception as e:
         await queue.join()
         print(f"Downloading Photo failed ! {e}")
+        traceback.print_exc()
         await final_edit_msg(
             session,
             chat_id,
@@ -244,9 +246,9 @@ async def message_creator(session, events, chat_id, sent_message_id, received_me
             multiple_events = False
             event_details = events[0]
             if event_details["suggestions"]:
-                events_message = f"Here's the pre-filled link to your 📅 calendar event\\: ✨\n\n\t🗓️ Event\\: {escape_markdownv2(event_details['name'])} \n\n\t📅 Date\\: {escape_markdownv2(date_cleaner(event_details['start_date']))} \n\n\t📍 Location\\: {escape_markdownv2(event_details['location'])} \n\n\t🔗 Event Link\\: [Event Link]({event_details['link']}) \n\n{escape_markdownv2(event_details['suggestions'])} \n\nEnjoy your event\\!"
+                events_message = f"Here's the pre\\-filled link to your 📅 calendar event\\: ✨\n\n\t🗓️ Event\\: {escape_markdownv2(event_details['name'])} \n\n\t📅 Date\\: {escape_markdownv2(date_cleaner(event_details['start_date']))} \n\n\t📍 Location\\: {escape_markdownv2(event_details['location'])} \n\n\t🔗 Event Link\\: [Event Link]({event_details['link']}) \n\n{escape_markdownv2(event_details['suggestions'])} \n\nEnjoy your event\\!"
             else: # no suggestion
-                events_message = f"Here's the pre-filled link to your 📅 calendar event\\: ✨\n\n\t🗓️ Event\\: {escape_markdownv2(event_details['name'])} \n\n\t📅 Date\\: {escape_markdownv2(date_cleaner(event_details['start_date']))} \n\n\t🔗 Event Link\\: [Event Link]({event_details['link']}) \n\nEnjoy your event\\!"
+                events_message = f"Here's the pre\\-filled link to your 📅 calendar event\\: ✨\n\n\t🗓️ Event\\: {escape_markdownv2(event_details['name'])} \n\n\t📅 Date\\: {escape_markdownv2(date_cleaner(event_details['start_date']))} \n\n\t🔗 Event Link\\: [Event Link]({event_details['link']}) \n\nEnjoy your event\\!"
         else: 
             events_message = "Here's the details to your 📅 calendar events\\: \nClick on the link to add it to your calendar \n"
 
@@ -254,7 +256,7 @@ async def message_creator(session, events, chat_id, sent_message_id, received_me
         i = 1
         for event_details in events:
             if isinstance(event_details, ValueError):
-                events_message += f"\n📅 Event \\#{i}\n{escape_markdownv2(event_details)}\n"
+                events_message += f"\n📅 Event \\#{i}\n{escape_markdownv2(str(event_details))}\n"
             else:
                 if not event_details["start_time"]:
                     event_details["start_time"] = ""

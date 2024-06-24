@@ -7,7 +7,6 @@ import json
 # from dotenv import load_dotenv
 # load_dotenv()
 
-
 def return_flow():
     try:
         creds_info = os.environ.get("GCAL_CRED")

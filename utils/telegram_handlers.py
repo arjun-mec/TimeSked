@@ -23,6 +23,10 @@ async def send_msg(session, chat_id, received_message_id, text="Error!", reply_m
 
         if response.status_code != 200:
             print("Error : ", response.text)
+
+            # try without parse mode
+            await send_msg(session, chat_id, received_message_id, text, reply_markup)
+
             return None
 
         return response
@@ -67,6 +71,9 @@ async def final_edit_msg(
         if response.status_code != 200:
             print("Error : ", response.text)
 
+            # try without parse mode
+            await final_edit_msg(session, chat_id, sent_message_id, text, received_message_id, location, coords, None)
+
         return response
 
     except Exception as e:
@@ -94,6 +101,9 @@ async def edit_msg(session, chat_id, sent_message_id, text, received_message_id=
         
         if response.status_code != 200:
             print("Error : ", response.text)
+
+            #try without parsing mode
+            await edit_msg(session, chat_id, sent_message_id, text, received_message_id, reply_markup, None)
         
         return response
 
@@ -193,21 +203,16 @@ async def send_venue(session, chat_id, location):
 
 async def image_downloader(session, file_id):
     """downloads the image using its file id"""
-    try:
+    file_path_response = await session.get(
+        f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={file_id}"
+    )
+    file_path = file_path_response.json()["result"]["file_path"]
 
-        file_path_response = await session.get(
-            f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={file_id}"
-        )
-        file_path = file_path_response.json()["result"]["file_path"]
+    image_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
+    image_response = await session.get(image_url, timeout=10.0)
 
-        image_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
-        image_response = await session.get(image_url)
+    image_bytes = BytesIO(image_response.content)
+    image = img_open(image_bytes)
 
-        image_bytes = BytesIO(image_response.content)
-        image = img_open(image_bytes)
+    return image
 
-        return image
-
-    except Exception as e:
-        print(f"An error has occurred in image_downloader : {e}")
-        return None

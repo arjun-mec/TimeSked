@@ -15,17 +15,14 @@ from config import CAL_CLIENT_ID, CAL_CLIENT_SECRET
 
 
 async def link_handler(session, chat_id, calendar_id):
-    print("inside link _ handler")
     try:
         if not calendar_id:
             flow = return_flow()
-            print(flow)
             auth_url, _ = flow.authorization_url(
                 access_type='offline',
                 prompt='consent',
                 state=str(chat_id),
             )
-            print("auth url generated", auth_url)
             auth_msg = "To add events seamlessly, TimeSked needs to connect with your Google Calendar. Click below to grant access! Don't worry, TimeSked can only create a dedicated calendar and add, view, or delete events within it. Your existing event details remain private. 👍"  
             reply_markup = {
                 "inline_keyboard": [
@@ -40,10 +37,10 @@ async def link_handler(session, chat_id, calendar_id):
             }
             
             await send_msg(session, chat_id, None, auth_msg, reply_markup, None)
-            print("msg sent")
 
         else:
             output_msg = "No need to sign in again 😊 Your calendar is already registered with TimeSked, new events will be automatically added to your calendar!"
+            await send_msg(session, chat_id, None, output_msg, None, None)
 
 
     except Exception as e:
