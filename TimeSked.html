@@ -2,419 +2,16 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TimeSked</title>
-  <link
-    href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAApdJREFUOE9tk0tIVGEUx3/fvePcO+OMmhVID7EiFTQnSpRI7YFZMtCmRaugfbs2bVtF6xatCizCHhQUREZohEkQVFSgvemBjpNOOs577sy9X3x3RhzRAxfudx7/8/ofcf/2DYmUCCBr5UmlM+i6ju7RkY4ySTRNA+lgFQqYXpNgtR8lUgjEMoBSdO/dRSKdo0rX8flMUqkMUtpUeTzoukYmkyUSiZDMe9YHCB/uJFt00DXNze5IB7c6ARLp6icnPzO7kEUqiMoKlEP40H7Onr9If08XJ08cZWY+RtDvp742yJXrwzRtbaClaRuzCzk3uNTC8JBU/atsg337ePT0OaZHktMM3nyYQiA4Fe4nm1jENLwgNf4uWRUVLAM4Did6Q3z6HWHq2w+G7jyiYBWoCQawbZtLF84RCASYi0aZTxTXAtgKoKeDHzNzPB4d5+7Dp4TaWvn28xem18vp8GH6j/QSjUSJJe2KIVZUcOxAO1+nZxkZm+DBk1Gy2by7QtMwOBM+yPGBAWKxfyyk1cSWh1gGUPs+0tXKTCxOLpPm8tWb/IsvkUimaNuxhYHuPXT3HmJmOsJiVqwP0Ld/N68/fmbThlqKmQQjYy+RxTyNDZuJO1U072qiptpPIqevD3AwtIOHz15gZ5IMDh4ntrCIEMINunbrHju3b6GluZl4TlvNAyEVaSQH2rdj+nxI6aBpukvjlc9GOg6TX34SX1VB+RaUsa0xiNcwEO6EZPkWSmx0HAdH2nz/8xdLr11LZZUpOR/BtovK3xXFf1WJ2oSyC6GhGyZmoASwQuXS05XxiVdYVoFgsFp58Pbdezr37VW/GF6DUEd7hTfla6xQLSUSJJMpN6NlWeTyeXymz21h08Z66urK2csx/wGUzXZPFdpLgAAAAABJRU5ErkJggg=="
-    rel="icon" type="image/x-icon" />
-  <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #121212;
-      color: #f1f1f1;
-      min-height: 100vh;
-      padding-right: 20px;
-      padding-left: 20px;
-      padding-top: 80px;
-    }
-
-    h1 {
-      margin-top: 20px;
-      text-align: center;
-      padding-left: 20px;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .cards {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      width: 100%;
-      margin: 20px auto;
-      gap: 2rem;
-      /* Add padding to the top to create space between header and cards */
-    }
-
-    .card {
-      background-color: #1c1f26;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: left;
-      flex: 1 0 21%;
-      margin: 10px;
-      color: white;
-      backdrop-filter: blur(15px);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(135deg,
-          rgba(255, 255, 255, 0.2) 0%,
-          rgba(255, 255, 255, 0) 100%);
-      border-radius: 50%;
-      filter: blur(50px);
-      z-index: -1;
-      top: -40px;
-      left: -40px;
-      transition: 0.8s ease;
-    }
-
-    .card:hover::before {
-      transform: translate(40px, 40px);
-    }
-
-    .card-content {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card h2 {
-      color: white;
-      font-size: 1.2rem;
-      margin: 10px 0 15px 0;
-    }
-
-    .card p {
-      font-size: 1.1rem;
-      margin: 0;
-    }
-
-    .fas {
-      font-family: "Font Awesome 5 Free";
-      font-weight: 900;
-      margin-right: 10px;
-      font-size: 1.5rem;
-    }
-
-    /* Timeline Styles */
-    .version-history {
-      width: 100%;
-    }
-
-    .timeline {
-      width: 100%;
-      /* Adjust width as needed */
-      position: relative;
-    }
-
-    .item {
-      margin-bottom: 40px;
-      /* Adjust spacing between items */
-      display: flex;
-      align-items: center;
-    }
-
-    .bubble {
-      background-color: #222;
-      padding: 10px 20px;
-      border-radius: 20px;
-      text-align: center;
-      color: #fff;
-      font-weight: bold;
-      position: relative;
-      min-width: 30px;
-      /* Set a minimum width for the bubble */
-    }
-
-    .details {
-      margin-left: 20px;
-      text-align: left;
-      line-height: 1.4;
-      flex-grow: 1;
-      width: 100%;
-    }
-
-    .timeline::before {
-      content: "";
-      position: absolute;
-      top: 20px;
-      bottom: 20px;
-      left: 35px;
-      /* Adjust the line position to center with the bubble */
-      width: 2px;
-      background-color: rgba(62, 62, 78, 1);
-      z-index: -1;
-    }
-
-    .item:first-child .bubble {
-      outline: 2px solid #007bff;
-      box-shadow: 0 0 15px rgba(0, 123, 255, 0.8);
-    }
-
-    .item:first-child .bubble::after {
-      content: "";
-      position: absolute;
-      bottom: -50px;
-      left: 33px;
-      /* Match the gray line position */
-      width: 6px;
-      height: 50px;
-      background: linear-gradient(to bottom,
-          rgba(0, 123, 255, 0.8),
-          transparent);
-      z-index: -1;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0px 15px;
-      background-color: #1c1f26;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 10;
-      backdrop-filter: blur(15px);
-    }
-
-    .telegram-button {
-      background-color: #0088cc;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      align-items: center;
-      text-decoration: none;
-      margin-right: 20px;
-    }
-
-    .telegram-button i {
-      margin-right: 5px;
-    }
-
-    .telegram-button a {
-      text-decoration: none !important;
-    }
-
-    button.telegram-button a {
-      text-decoration: none;
-    }
-
-    footer {
-      background-color: #1c1f26;
-      backdrop-filter: blur(15px);
-      text-align: center;
-      width: 100%;
-      color: white;
-      margin-bottom: 0;
-      display: flex;
-      /* Add flexbox to the footer */
-      justify-content: center;
-      /* Center the content */
-      padding-left: 0px;
-      padding-right: 0px;
-    }
-
-    .social-media-container {
-      width: fit-content;
-      height: fit-content;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 25px 25px;
-      gap: 20px;
-      margin: 0 auto;
-    }
-
-    .socialContainer {
-      width: 60px;
-      height: 60px;
-      background-color: rgb(44, 44, 44);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      transition-duration: 0.3s;
-      border-radius: 50%;
-      text-decoration: none;
-      /* Remove underline */
-    }
-
-    .socialContainer i {
-      /* Target <i> inside .socialContainer */
-      color: rgb(255, 255, 255);
-      /* Use "color" to change icon color */
-    }
-
-    /* Hover Colors  */
-    /*Linkedin*/
-    .containerOne:hover {
-      background-color: #0072b1;
-      transition-duration: 0.3s;
-    }
-
-    /*Github*/
-    .containerTwo:hover {
-      background-color: #2dba4e;
-      transition-duration: 0.3s;
-    }
-
-    /*Instagram*/
-    .containerThree:hover {
-      background-color: #d62976;
-      transition-duration: 0.3s;
-    }
-
-    /*Gmail*/
-    .containerFour:hover {
-      background-color: #c71610;
-      transition-duration: 0.3s;
-    }
-
-    .containerFour .socialSvg {
-      margin-left: 10px;
-      /* Adjust value as needed */
-    }
-
-    .socialContainer:active {
-      transform: scale(0.9);
-      transition-duration: 0.3s;
-    }
-
-    .socialSvg {
-      width: 50px;
-      /* Adjust this value for desired width */
-      height: 50px;
-      /* Adjust this value for desired height */
-      fill: rgb(255, 255, 255);
-    }
-
-    /* Hover Animation */
-    .socialContainer:hover .socialSvg {
-      animation: slide-in-top 0.3s both;
-    }
-
-    @keyframes slide-in-top {
-      0% {
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-
-      100% {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .introduction {
-      gap: 2rem;
-      margin-bottom: 15px;
-      padding-top: 15px;
-      display: flex;
-      flex-direction: row;
-    }
-
-    .introduction p {
-      flex: 1;
-      line-height: 1.6;
-    }
-
-    .introduction h2,
-    h3 {
-      font-family: 'Montserrat', sans-serif;
-    }
-
-
-    /* Styles for smaller screens (e.g., phones) */
-    @media (max-width: 768px) {
-      body {
-        padding-top: 80px;
-      }
-
-      .cards {
-        flex-direction: column;
-      }
-
-      .card {
-        flex: 1 0 100%;
-      }
-
-      .item {
-        /* Adjust the timeline for smaller screens */
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .details {
-        margin-left: 90px;
-        margin-top: 10px;
-        /* Ensure the details fit the screen width */
-        word-break: break-word;
-        overflow-wrap: break-word;
-        width: 70%;
-        /* Adjust the width as needed to prevent overflow */
-      }
-
-      .timeline::before {
-        left: 30px;
-        /* Adjust for smaller screens */
-      }
-
-      .item:first-child .bubble::after {
-        left: 28px;
-        /* Adjust for smaller screens */
-      }
-
-      .header {
-        flex-direction: column;
-        align-items: center;
-        padding-bottom: 10px;
-      }
-
-      .header h1 {
-        margin-bottom: 10px;
-        padding-left: 10px;
-        padding-right: 10px;
-      }
-
-      .cards {
-        padding-top: 2rem;
-      }
-
-      .introduction {
-        flex-direction: column;
-        justify-content: center;
-      }
-
-      .intro {
-        padding: 30px;
-      }
-
-      .video-container {
-        padding: 30px;
-        width: 90%;
-      }
-    }
-
-    /* For Chrome, Edge, and Safari */
-    ::-webkit-scrollbar {
-      width: 10px;
-      /* Adjust width as needed */
-      background-color: transparent;
-      /* Transparent background */
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background-color: rgba(62, 62, 78, 1);
-      /* Light gray color */
-      border-radius: 5px;
-      /* Rounded corners */
-    }
-  </style>
-  <script src="https://kit.fontawesome.com/2da45a37f0.js" crossorigin="anonymous"></script>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TimeSked</title>
+    <link
+        href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAApdJREFUOE9tk0tIVGEUx3/fvePcO+OMmhVID7EiFTQnSpRI7YFZMtCmRaugfbs2bVtF6xatCizCHhQUREZohEkQVFSgvemBjpNOOs577sy9X3x3RhzRAxfudx7/8/ofcf/2DYmUCCBr5UmlM+i6ju7RkY4ySTRNA+lgFQqYXpNgtR8lUgjEMoBSdO/dRSKdo0rX8flMUqkMUtpUeTzoukYmkyUSiZDMe9YHCB/uJFt00DXNze5IB7c6ARLp6icnPzO7kEUqiMoKlEP40H7Onr9If08XJ08cZWY+RtDvp742yJXrwzRtbaClaRuzCzk3uNTC8JBU/atsg337ePT0OaZHktMM3nyYQiA4Fe4nm1jENLwgNf4uWRUVLAM4Did6Q3z6HWHq2w+G7jyiYBWoCQawbZtLF84RCASYi0aZTxTXAtgKoKeDHzNzPB4d5+7Dp4TaWvn28xem18vp8GH6j/QSjUSJJe2KIVZUcOxAO1+nZxkZm+DBk1Gy2by7QtMwOBM+yPGBAWKxfyyk1cSWh1gGUPs+0tXKTCxOLpPm8tWb/IsvkUimaNuxhYHuPXT3HmJmOsJiVqwP0Ld/N68/fmbThlqKmQQjYy+RxTyNDZuJO1U072qiptpPIqevD3AwtIOHz15gZ5IMDh4ntrCIEMINunbrHju3b6GluZl4TlvNAyEVaSQH2rdj+nxI6aBpukvjlc9GOg6TX34SX1VB+RaUsa0xiNcwEO6EZPkWSmx0HAdH2nz/8xdLr11LZZUpOR/BtovK3xXFf1WJ2oSyC6GhGyZmoASwQuXS05XxiVdYVoFgsFp58Pbdezr37VW/GF6DUEd7hTfla6xQLSUSJJMpN6NlWeTyeXymz21h08Z66urK2csx/wGUzXZPFdpLgAAAAABJRU5ErkJggg=="
+        rel="icon" type="image/x-icon" />
+    <link rel="stylesheet" href="style.css"> 
+    <script src="https://kit.fontawesome.com/2da45a37f0.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
     rel="stylesheet">
 </head>
 
@@ -430,7 +27,7 @@
 
   <div class="introduction">
     <div class="intro">
-      <h2>TimeSked, AI-Powered Scheduling Assistant on Telegram</h2>
+      <h2 class="main-heading"><span class="blue-underline">TimeSked, AI-Powered Scheduling Assistant on Telegram</span></h2>
       <p>
         Manually inputting event details into calendars can be a very time-consuming task. This was an issue I was
         facing
@@ -438,7 +35,7 @@
         simplifies
         event scheduling through intelligent automation and seamless Google Calendar integration.
       </p>
-      <h3>Key Features of TimeSked:</h3>
+      <h3><span class="blue-underline">Key Features of TimeSked :</span></h3>
       <ul>
         <li><b>Extract event information:</b> Simply send TimeSked a message containing event information, and it will
           automatically extract the essential details.</li>
@@ -451,7 +48,7 @@
           Telegram.</li>
       </ul>
 
-      <h3>Powered by</h3>
+      <h3><span class="blue-underline">Powered by : </span></h3>
       <ul>
         <li>FastAPI (Python) for the webhook server</li>
         <li>Firebase for database management</li>
@@ -515,7 +112,7 @@
     </div>
   </div>
   <div class="version-history">
-    <h2>Version History</h2>
+    <h2><span class="blue-underline">Version History</span></h2>
     <div class="timeline">
       <div class="item">
         <div class="bubble">V3.0</div>
