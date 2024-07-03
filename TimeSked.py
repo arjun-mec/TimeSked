@@ -114,10 +114,14 @@ async def index(request: fast_request):
 
                     col_ref = db.collection("user_records")
                     doc_ref = col_ref.document(str(chat_id))
-                    doc = doc_ref.get().to_dict()
+                    doc = doc_ref.get()
+                    position = None
+                    calendar_id = None
 
-                    position = doc["position"]
-                    calendar_id = doc["calendar_id"]
+                    if doc.exists:
+                        doc = doc.to_dict()
+                        position = doc["position"]
+                        calendar_id = doc["calendar_id"]
 
                     if not position:
                         match user_message:

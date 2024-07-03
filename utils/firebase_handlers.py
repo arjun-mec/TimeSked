@@ -27,7 +27,7 @@ def user_handler(db, msg):
         if doc.exists:
             doc_ref.update({"no_of_uses":firestore.Increment(1)})
         else:
-            doc_ref.set({"chat_id":chat_id, "name":name, "username":username, "date":date, "no_of_uses":1})
+            doc_ref.set({"chat_id":chat_id, "name":name, "username":username, "date":date, "no_of_uses":1, "access_token": None, "calendar_id": None, "chat_history": None, "position": None, "refresh_token": None})
 
     except Exception as e:
         print(f"An error occurred in user_handler function : {e}")
