@@ -1,11 +1,27 @@
-from utils.telegram_handlers import send_msg, send_typing_action, edit_msg, final_edit_msg, image_downloader, send_location_action, send_venue
+from utils.telegram_handlers import (
+    send_msg,
+    send_typing_action,
+    edit_msg,
+    final_edit_msg,
+    image_downloader,
+    send_location_action,
+    send_venue,
+)
 import asyncio
 from utils.firebase_handlers import new_msg_updater, event_info_add
 from utils.data_validation import process_events, date_cleaner, escape_markdownv2
 from utils.gemini_models import prompter
-from utils.weather_info import coordinates_retriever, weather_retriever, suggestion_giver
+from utils.weather_info import (
+    coordinates_retriever,
+    weather_retriever,
+    suggestion_giver,
+)
 from utils.gcal_events import gcal_event_handler
-from utils.view_events import view_specific_event, view_upcoming_events, delete_specific_event
+from utils.view_events import (
+    view_specific_event,
+    view_upcoming_events,
+    delete_specific_event,
+)
 from utils.chat_handlers import search_handler
 from utils.gcal_events import get_authenticated_service, delete_event_calendar
 from google.cloud.firestore_v1.base_query import FieldFilter
@@ -17,6 +33,24 @@ import traceback
 
 
 async def text_logic(db, session, msg, chat_id, received_message_id, queue):
+    """Handles logic for incoming text messages.
+
+    Extracts text from the message, sends a waiting message, triggers event
+    detail extraction, updates the database with the new message, and handles
+    potential errors.
+
+    Args:
+        db: Firestore client instance.
+        session: httpx asynchronous client session object.
+        msg (dict): Telegram message data.
+        chat_id (int): Telegram chat ID of the user.
+        received_message_id (int): Message ID of the received user message.
+        queue (asyncio.Queue): Queue for managing asynchronous operations.
+
+    Raises:
+        Exception: If an error occurs during the process, sends an error message
+            to the user and prints the error message to the console.
+    """
     try:
         txt = msg["message"]["text"]
         waiting_msg = "⏳ Please Wait while TimeSked does its job... "
@@ -29,7 +63,16 @@ async def text_logic(db, session, msg, chat_id, received_message_id, queue):
         asyncio.create_task(send_typing_action(session, chat_id))
         sent_message_id = response.json()["result"]["message_id"]
 
-        await text_img_handler(db, session, "text", chat_id, sent_message_id, received_message_id, txt, queue)
+        await text_img_handler(
+            db,
+            session,
+            "text",
+            chat_id,
+            sent_message_id,
+            received_message_id,
+            txt,
+            queue,
+        )
 
         asyncio.create_task(new_msg_updater(db, chat_id, received_message_id, txt))
 
@@ -47,6 +90,24 @@ async def text_logic(db, session, msg, chat_id, received_message_id, queue):
 
 
 async def photo_logic(db, session, msg, chat_id, received_message_id, queue):
+    """Handles logic for incoming photo messages.
+
+    Downloads the photo, sends a waiting message, triggers event detail
+    extraction, updates the database with the new message and file ID, and
+    handles potential errors.
+
+    Args:
+        db: Firestore client instance.
+        session: httpx asynchronous client session object.
+        msg (dict): Telegram message data.
+        chat_id (int): Telegram chat ID of the user.
+        received_message_id (int): Message ID of the received user message.
+        queue (asyncio.Queue): Queue for managing asynchronous operations.
+
+    Raises:
+        Exception: If an error occurs during the process, sends an error message
+            to the user and prints the error message to the console.
+    """
     image = None
     try:
         waiting_msg = "⏳ Please Wait while TimeSked does its job... \nThis might take upto 10 seconds !⏳"
@@ -80,26 +141,55 @@ async def photo_logic(db, session, msg, chat_id, received_message_id, queue):
         try:
             asyncio.create_task(send_typing_action(session, chat_id))
             await text_img_handler(
-                db, session, "image", chat_id, sent_message_id, received_message_id, image, queue
+                db,
+                session,
+                "image",
+                chat_id,
+                sent_message_id,
+                received_message_id,
+                image,
+                queue,
             )
             db_file_id = "F!L3" + str(file_id)
-            asyncio.create_task(new_msg_updater(db, chat_id, received_message_id, db_file_id))
+            asyncio.create_task(
+                new_msg_updater(db, chat_id, received_message_id, db_file_id)
+            )
 
         except Exception as e:
             await queue.join()
             output_msg = "An error has occurred in photo logic. Please try again later"
             print(output_msg + f"\n{e}")
             await final_edit_msg(
-                session, 
+                session,
                 chat_id,
                 sent_message_id,
                 output_msg,
                 received_message_id,
             )
-            
 
-async def text_img_handler(db, session, type, chat_id, sent_message_id, received_message_id, message, queue):
-    """handles the later half of text and image logic after the respective functions are called"""
+
+async def text_img_handler(
+    db, session, type, chat_id, sent_message_id, received_message_id, message, queue
+):
+    """Handles event extraction, processing, and calendar interaction for text and image messages.
+
+    Processes the extracted events, retrieves calendar ID, handles both Google Calendar
+    and link-based event creation, and constructs the final message with event details.
+
+    Args:
+        db: Firestore client instance.
+        session: httpx asynchronous client session object.
+        type (str): Type of message, either "text" or "image".
+        chat_id (int): Telegram chat ID of the user.
+        sent_message_id (int): Message ID of the sent message to be updated.
+        received_message_id (int): Message ID of the received user message.
+        message (str or bytes): Text content or image data.
+        queue (asyncio.Queue): Queue for managing asynchronous operations.
+
+    Raises:
+        Exception: If an error occurs during the process, sends an error message
+            to the user and prints the error message to the console.
+    """
     try:
         retries = 3
         for attempt in range(retries):
@@ -110,7 +200,9 @@ async def text_img_handler(db, session, type, chat_id, sent_message_id, received
             else:
                 waiting_msg = "⏳ Please Wait while TimeSked does its job... \nThis might take upto 10 seconds !⏳\n\n - Image downloaded successfully ✨\n - Extracting event details 🔍"
 
-            await queue.put((chat_id, sent_message_id, waiting_msg, received_message_id))
+            await queue.put(
+                (chat_id, sent_message_id, waiting_msg, received_message_id)
+            )
             asyncio.create_task(send_typing_action(session, chat_id))
 
             # prompt the model
@@ -120,7 +212,9 @@ async def text_img_handler(db, session, type, chat_id, sent_message_id, received
                 break
             else:
                 output_msg = f"Attempt {attempt + 1} failed ❌. \nReattempting, Please Wait... ⌛"
-                await queue.put((chat_id, sent_message_id, output_msg, received_message_id))
+                await queue.put(
+                    (chat_id, sent_message_id, output_msg, received_message_id)
+                )
                 asyncio.create_task(send_typing_action(session, chat_id))
                 retries -= 1
 
@@ -140,7 +234,7 @@ async def text_img_handler(db, session, type, chat_id, sent_message_id, received
                 received_message_id,
             )
             return None
-            
+
         waiting_msg += "\n - Event detail extraction successful 🎉"
         await queue.put((chat_id, sent_message_id, waiting_msg, received_message_id))
         asyncio.create_task(send_typing_action(session, chat_id))
@@ -151,10 +245,11 @@ async def text_img_handler(db, session, type, chat_id, sent_message_id, received
         if events == [] or events == [[]]:
             output_msg = "Oops! Looks like that message is missing some key event details. Please try again, and I'll get it added to your calendar. 🗓️"
             await queue.join()
-            await final_edit_msg(session, chat_id, sent_message_id, output_msg, received_message_id)
+            await final_edit_msg(
+                session, chat_id, sent_message_id, output_msg, received_message_id
+            )
             return None
 
-          
         suggestions = None
         coordinates = None
         if len(events) == 1:
@@ -172,8 +267,7 @@ async def text_img_handler(db, session, type, chat_id, sent_message_id, received
                     received_message_id,
                 )
                 return None
-                
-            
+
             # weather suggestions for single event
             location = events[0][5]
             if location is not None:
@@ -194,42 +288,134 @@ async def text_img_handler(db, session, type, chat_id, sent_message_id, received
 
         if calendar_id:
             flag = "gcal"
-            list_of_events = await gcal_event_handler(db, waiting_msg, chat_id, received_message_id, sent_message_id, events, suggestions, calendar_id, queue)
-        
+            list_of_events = await gcal_event_handler(
+                db,
+                waiting_msg,
+                chat_id,
+                received_message_id,
+                sent_message_id,
+                events,
+                suggestions,
+                calendar_id,
+                queue,
+            )
+
         else:
             flag = "link"
-            list_of_events = await link_event_handler(db, waiting_msg, chat_id, received_message_id, sent_message_id, events, suggestions, queue)
+            list_of_events = await link_event_handler(
+                db,
+                waiting_msg,
+                chat_id,
+                received_message_id,
+                sent_message_id,
+                events,
+                suggestions,
+                queue,
+            )
 
         print(f"\nProcessed events : \n{list_of_events}")
-        await message_creator(session, list_of_events, chat_id, sent_message_id, received_message_id, flag, coordinates, queue)
-    
+        await message_creator(
+            session,
+            list_of_events,
+            chat_id,
+            sent_message_id,
+            received_message_id,
+            flag,
+            coordinates,
+            queue,
+        )
+
     except Exception as e:
         error_msg = f"Sorry ! An error has occurred \n{e}"
         await queue.put((chat_id, sent_message_id, error_msg, received_message_id))
         print("Error in text_img_handler \n", e)
 
 
-async def link_event_handler(db, waiting_msg, chat_id, received_message_id, sent_message_id, events, suggestions, queue):
+async def link_event_handler(
+    db,
+    waiting_msg,
+    chat_id,
+    received_message_id,
+    sent_message_id,
+    events,
+    suggestions,
+    queue,
+):
+    """Handles the creation and storage of pre-filled Google Calendar event links.
+
+    Processes each event, generates a shortened Google Calendar link, updates the database
+    with event information, and manages the asynchronous operations through the queue.
+
+    Args:
+        db: Firestore client instance.
+        waiting_msg (str): Waiting message to be sent to the user.
+        chat_id (int): Telegram chat ID of the user.
+        received_message_id (int): Message ID of the received user message.
+        sent_message_id (int): Message ID of the sent message to be updated.
+        events (list): List of processed events.
+        suggestions (str, optional): Weather-based suggestions for the event.
+                                     Defaults to None.
+        queue (asyncio.Queue): Queue for managing asynchronous operations.
+
+    Returns:
+        list: List of dictionaries, each containing event details and the generated link.
+    """
     waiting_msg += "\n - Link generation in process 🔗"
     await queue.put((chat_id, sent_message_id, waiting_msg, received_message_id))
-    
+
     list_of_events = []
     for event_details in events:
         if isinstance(event_details, list):
             short_link = categorize(event_details)
-            list_of_events.append({"name": event_details[0], "start_date": event_details[1], "start_time": event_details[3], "location": event_details[5], "link": short_link, "suggestions": suggestions})
-            asyncio.create_task(event_info_add(
-                db, chat_id, received_message_id, event_details, short_link
-            ))
+            list_of_events.append(
+                {
+                    "name": event_details[0],
+                    "start_date": event_details[1],
+                    "start_time": event_details[3],
+                    "location": event_details[5],
+                    "link": short_link,
+                    "suggestions": suggestions,
+                }
+            )
+            asyncio.create_task(
+                event_info_add(
+                    db, chat_id, received_message_id, event_details, short_link
+                )
+            )
         else:
             list_of_events.append(event_details)
-    
+
     return list_of_events
 
 
-async def message_creator(session, events, chat_id, sent_message_id, received_message_id, type, coordinates, queue):
+async def message_creator(
+    session,
+    events,
+    chat_id,
+    sent_message_id,
+    received_message_id,
+    type,
+    coordinates,
+    queue,
+):
+    """Creates and sends the final message with event details and links.
+
+    Constructs a message based on the type of event handling (Google Calendar or link-based),
+    formats the message with event information, and sends the final response to the user.
+
+    Args:
+        session: httpx asynchronous client session object.
+        events (list): List of event details, including name, date, time, location, and link.
+        chat_id (int): Telegram chat ID of the user.
+        sent_message_id (int): Message ID of the sent message to be updated.
+        received_message_id (int): Message ID of the received user message.
+        type (str):  Type of event handling, either "gcal" or "link".
+        coordinates (tuple, optional): Latitude and longitude coordinates of the event location.
+                                       Defaults to None.
+        queue (asyncio.Queue): Queue for managing asynchronous operations.
+    """
     multiple_events = True
-    
+
     if type == "gcal":
         if len(events) == 1:
             multiple_events = False
@@ -240,30 +426,32 @@ async def message_creator(session, events, chat_id, sent_message_id, received_me
                 events_message = f"🎉 Your event has been added to your calendar\\! \n\n\t🗓️ Event\\: {escape_markdownv2(event_details['name'])} \n\n\t📅 Date\\: {escape_markdownv2(date_cleaner(event_details['start_date']))} \n\n\t🔗 Event Link\\: [Event Link]({event_details['link']}) \n\nEnjoy your event\\!"
         else:
             events_message = "🎉 Here are the details to your events ✨ \nAll the valid events have been added to your calendar\\! \n"
-    
-    else: 
+
+    else:
         if len(events) == 1:
             multiple_events = False
             event_details = events[0]
             if event_details["suggestions"]:
                 events_message = f"Here's the pre\\-filled link to your 📅 calendar event\\: ✨\n\n\t🗓️ Event\\: {escape_markdownv2(event_details['name'])} \n\n\t📅 Date\\: {escape_markdownv2(date_cleaner(event_details['start_date']))} \n\n\t📍 Location\\: {escape_markdownv2(event_details['location'])} \n\n\t🔗 Event Link\\: [Event Link]({event_details['link']}) \n\n{escape_markdownv2(event_details['suggestions'])} \n\nEnjoy your event\\!"
-            else: # no suggestion
+            else:  # no suggestion
                 events_message = f"Here's the pre\\-filled link to your 📅 calendar event\\: ✨\n\n\t🗓️ Event\\: {escape_markdownv2(event_details['name'])} \n\n\t📅 Date\\: {escape_markdownv2(date_cleaner(event_details['start_date']))} \n\n\t🔗 Event Link\\: [Event Link]({event_details['link']}) \n\nEnjoy your event\\!"
-        else: 
+        else:
             events_message = "Here's the details to your 📅 calendar events\\: \nClick on the link to add it to your calendar \n"
 
     if multiple_events:
         i = 1
         for event_details in events:
             if isinstance(event_details, ValueError):
-                events_message += f"\n📅 Event \\#{i}\n{escape_markdownv2(str(event_details))}\n"
+                events_message += (
+                    f"\n📅 Event \\#{i}\n{escape_markdownv2(str(event_details))}\n"
+                )
             else:
                 if not event_details["start_time"]:
                     event_details["start_time"] = ""
                 events_message += f"\n📅 Event \\#{i} \n{escape_markdownv2(event_details['name'])} \n{escape_markdownv2(date_cleaner(event_details['start_date']))}  {escape_markdownv2(event_details['start_time'])} \nLocation \\: {escape_markdownv2(event_details['location'])} \nLink \\: [Event Link]({event_details['link']})\n"
-            
+
             i += 1
-    
+
     # events_message = escape_markdownv2(events_message)
 
     await queue.join()
@@ -287,11 +475,24 @@ async def message_creator(session, events, chat_id, sent_message_id, received_me
             received_message_id,
             None,
             None,
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
 
 
 def categorize(event_details):
+    """Categorizes and generates a Google Calendar event link from provided event details.
+
+    Processes event details, formats dates and times, constructs the Google Calendar link with
+    encoded parameters, and returns the generated link.
+
+    Args:
+        event_details (list): List containing event name, start date, end date, start time,
+                              end time, location, and description.
+
+    Returns:
+        str: The generated Google Calendar event link. If an error occurs, returns an error
+             message string.
+    """
     try:
         if isinstance(event_details, list):  # if event_details is a list
             name, start_date, end_date, start_time, end_time, location, description = (
@@ -362,17 +563,39 @@ def categorize(event_details):
     except Exception as e:
         print(f"An error has occurred in the categorize function {e}")
         return "❌ An error has occurred. Please try again later"
-    
+
 
 async def handle_callback_query(db, session, callback_query, queue):
-    """handles all the cases when a callback query is received from the bot"""
+    """Handles all callback queries from inline keyboard buttons.
+
+    Manages various callback actions, including event regeneration, location sharing,
+    viewing and deleting specific events, and navigating between event lists.
+
+    Args:
+        db: Firestore client instance.
+        session: httpx asynchronous client session object.
+        callback_query (dict): Telegram callback query data.
+        queue (asyncio.Queue): Queue for managing asynchronous operations.
+
+    Raises:
+        Exception: If an error occurs during event regeneration, restores the previous
+            bot response and prints the error message to the console. Prints any other
+            errors encountered to the console.
+    """
     try:
         chat_id = callback_query["message"]["chat"]["id"]
         sent_message_id = callback_query["message"]["message_id"]
 
         if callback_query["data"].startswith("RE^!"):
             received_message_id = int(callback_query["data"][4:])
-            await queue.put((chat_id, sent_message_id, "Working on it! Deleting those previous events... This might take a moment. ⏳", received_message_id))
+            await queue.put(
+                (
+                    chat_id,
+                    sent_message_id,
+                    "Working on it! Deleting those previous events... This might take a moment. ⏳",
+                    received_message_id,
+                )
+            )
             regen_deleter(db, chat_id, received_message_id)
 
             tg_response = callback_query["message"]["reply_to_message"]
@@ -387,7 +610,7 @@ async def handle_callback_query(db, session, callback_query, queue):
                     sent_message_id,
                     received_message_id,
                     message,
-                    queue
+                    queue,
                 )
             else:
                 message = tg_response["text"]
@@ -399,7 +622,7 @@ async def handle_callback_query(db, session, callback_query, queue):
                     sent_message_id,
                     received_message_id,
                     message,
-                    queue
+                    queue,
                 )
 
         elif callback_query["data"].startswith("L0C@"):
@@ -412,7 +635,9 @@ async def handle_callback_query(db, session, callback_query, queue):
 
         elif callback_query["data"].startswith("Button"):
             button_number = int(callback_query["data"][6:])
-            await view_specific_event(db, session, chat_id, sent_message_id, button_number)
+            await view_specific_event(
+                db, session, chat_id, sent_message_id, button_number
+            )
 
             url = f"https://api.telegram.org/bot{TOKEN}/answerCallbackQuery"
             data = {"callback_query_id": callback_query["id"]}
@@ -430,20 +655,21 @@ async def handle_callback_query(db, session, callback_query, queue):
                     "show_alert": True,
                 }
                 await session.post(url, json=data)
-                await view_upcoming_events(db, session, chat_id, sent_message_id, edit=True)
+                await view_upcoming_events(
+                    db, session, chat_id, sent_message_id, edit=True
+                )
 
         elif callback_query["data"] == "Back to event_list":
             await view_upcoming_events(db, session, chat_id, sent_message_id, edit=True)
             url = f"https://api.telegram.org/bot{TOKEN}/answerCallbackQuery"
             data = {"callback_query_id": callback_query["id"]}
             await session.post(url, json=data)
-        
+
         elif callback_query["data"] == "Confirm CHAT":
             await search_handler(db, session, chat_id, True, sent_message_id)
             url = f"https://api.telegram.org/bot{TOKEN}/answerCallbackQuery"
             data = {"callback_query_id": callback_query["id"]}
             await session.post(url, json=data)
-        
 
     except Exception as e:
         if callback_query["data"].startswith("RE^!"):
@@ -456,40 +682,70 @@ async def handle_callback_query(db, session, callback_query, queue):
             bot_prev_response += callback_query["message"]["text"]
 
             await queue.join()
-            await final_edit_msg(session, chat_id, sent_message_id, bot_prev_response, received_message_id)
+            await final_edit_msg(
+                session,
+                chat_id,
+                sent_message_id,
+                bot_prev_response,
+                received_message_id,
+            )
         print(f"An error has occurred in handle_callback_query function \n {e}")
         traceback.print_exc()
 
 
 def regen_deleter(db, chat_id, message_id):
-        col_ref = db.collection("event_info")
-        # gets the event ids and doc ids of the events to be deleted from calendar and documents respectively
-        events_ids = []
-        doc_ids = []
+    """Deletes events from both Google Calendar and Firestore related to a specific message.
 
-        docs = col_ref.where(filter=FieldFilter("message_id", "==", message_id)).get()
-        for doc in docs:
-            events_ids.append(doc.to_dict()["event_id"])
-            doc_ids.append(doc.id)
+    Retrieves event IDs and document IDs from Firestore, deletes the documents,
+    authenticates with Google Calendar API, and deletes the corresponding events.
 
-        # deleting docs from firebase
-        for doc_id in doc_ids:
-            col_ref.document(str(doc_id)).delete()
+    Args:
+        db: Firestore client instance.
+        chat_id (int): Telegram chat ID of the user.
+        message_id (int): Message ID associated with the events to be deleted.
+    """
+    col_ref = db.collection("event_info")
+    # gets the event ids and doc ids of the events to be deleted from calendar and documents respectively
+    events_ids = []
+    doc_ids = []
 
-        if len(events_ids) > 0:
-            if events_ids[0]:
-                # deleting events from calendar
-                col_ref = db.collection("user_records")
-                doc = col_ref.document(str(chat_id)).get().to_dict()
-                calendar_id = doc["calendar_id"]
-                access_token = doc["access_token"]
-                refresh_token = doc["refresh_token"]
-                service = get_authenticated_service(db, chat_id, access_token, refresh_token)
-                for event_id in events_ids:
-                    delete_event_calendar(service, calendar_id, event_id)
+    docs = col_ref.where(filter=FieldFilter("message_id", "==", message_id)).get()
+    for doc in docs:
+        events_ids.append(doc.to_dict()["event_id"])
+        doc_ids.append(doc.id)
+
+    # deleting docs from firebase
+    for doc_id in doc_ids:
+        col_ref.document(str(doc_id)).delete()
+
+    if len(events_ids) > 0:
+        if events_ids[0]:
+            # deleting events from calendar
+            col_ref = db.collection("user_records")
+            doc = col_ref.document(str(chat_id)).get().to_dict()
+            calendar_id = doc["calendar_id"]
+            access_token = doc["access_token"]
+            refresh_token = doc["refresh_token"]
+            service = get_authenticated_service(
+                db, chat_id, access_token, refresh_token
+            )
+            for event_id in events_ids:
+                delete_event_calendar(service, calendar_id, event_id)
 
 
 async def start_handler(session, msg, chat_id, received_message_id):
+    """Handles the /start command, sending a welcome message to the user.
+
+    Args:
+        session: httpx asynchronous client session object.
+        msg (dict): Telegram message data.
+        chat_id (int): Telegram chat ID of the user.
+        received_message_id (int): Message ID of the received user message.
+
+    Raises:
+        Exception: If an error occurs during the process, sends an error message
+            to the user and prints the error message to the console.
+    """
     try:
         username = msg["message"]["from"].get("first_name")
         if not username:
