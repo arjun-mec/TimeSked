@@ -2,7 +2,7 @@
 
 TimeSked is a Telegram bot that makes scheduling events effortless. Send TimeSked a message describing your event, and it will extract the details and help you add it to your Google Calendar.
 
-**Overview Video : ** [https://www.youtube.com/watch?v=rZlUvHB2BcA&pp=ygUIVGltZVNLZWQ%3D](https://www.youtube.com/watch?v=rZlUvHB2BcA&pp=ygUIVGltZVNLZWQ%3D)
+**Overview Video :** [https://www.youtube.com/watch?v=rZlUvHB2BcA&pp=ygUIVGltZVNLZWQ%3D](https://www.youtube.com/watch?v=rZlUvHB2BcA&pp=ygUIVGltZVNLZWQ%3D)
 
 ### Features:
 
